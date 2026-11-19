@@ -1,0 +1,103 @@
+<fieldset class="section" [formGroup]="form()">
+  <legend class="section__title"><span class="section__step">1</span> Route</legend>
+
+  <div class="route">
+    <!-- Pickup: first node on the line -->
+    <div class="route__row route__row--pickup" [class.route__row--error]="pickupErrors().length > 0 || isDuplicate(-1)">
+      <div class="route__rail" aria-hidden="true">
+        <span class="route__node route__node--pickup"></span>
+      </div>
+      <div class="route__body">
+        <label class="field__label" for="pickup">Pickup</label>
+        <select id="pickup" class="input" formControlName="pickup" aria-describedby="pickup-errors">
+          <option [ngValue]="null" disabled>Where should the trucks start?</option>
+          @for (location of locations; track location.id) {
+            <option [ngValue]="location.id">{{ optionLabel(location.id, location.name, -1) }}</option>
+          }
+        </select>
+        <div id="pickup-errors">
+          @for (message of pickupErrors(); track $index) {
+            <p class="field__error">{{ message }}</p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Drop-offs: reorder by dragging the handle, or with the arrow buttons -->
+    <ol class="route__stops" cdkDropList cdkDropListLockAxis="y" (cdkDropListDropped)="onDrop($event)" aria-label="Drop-off locations, in delivery order">
+      @for (control of dropOffs.controls; track control; let i = $index; let first = $first; let last = $last) {
+        <li class="route__row" cdkDrag [class.route__row--error]="dropOffMissing(i) || isDuplicate(i)" data-testid="drop-off">
+          <div class="route__placeholder" *cdkDragPlaceholder></div>
+          <div class="route__rail" aria-hidden="true">
+            @if (legDistance(i); as km) {
+              <span class="route__leg">{{ km }} km</span>
+            }
+            <span class="route__node" [class.route__node--last]="last">{{ i + 1 }}</span>
+          </div>
+          <div class="route__body">
+            <span class="field__label" aria-hidden="true">{{ last && dropOffs.length > 1 ? 'Final drop-off' : 'Drop-off ' + (i + 1) }}</span>
+            <div class="route__controls">
+              <button type="button" class="route__handle" cdkDragHandle [attr.aria-label]="'Drag to reorder drop-off ' + (i + 1)" title="Drag to reorder">
+                <svg width="12" height="18" viewBox="0 0 12 18" aria-hidden="true"><circle cx="3" cy="3" r="1.6"/><circle cx="9" cy="3" r="1.6"/><circle cx="3" cy="9" r="1.6"/><circle cx="9" cy="9" r="1.6"/><circle cx="3" cy="15" r="1.6"/><circle cx="9" cy="15" r="1.6"/></svg>
+              </button>
+              <select class="input" [formControl]="control" [attr.aria-label]="'Drop-off ' + (i + 1)">
+                <option [ngValue]="null" disabled>Choose drop-off {{ i + 1 }}</option>
+                @for (location of locations; track location.id) {
+                  <option [ngValue]="location.id">{{ optionLabel(location.id, location.name, i) }}</option>
+                }
+              </select>
+              <div class="route__actions">
+                <button type="button" class="icon-btn" (click)="move(i, i - 1)" [disabled]="first" [attr.aria-label]="'Move drop-off ' + (i + 1) + ' up'" title="Move up">
+                  <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 11V3M3.5 6.5 7 3l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button type="button" class="icon-btn" (click)="move(i, i + 1)" [disabled]="last" [attr.aria-label]="'Move drop-off ' + (i + 1) + ' down'" title="Move down">
+                  <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 3v8M3.5 7.5 7 11l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button
+                  type="button"
+                  class="icon-btn icon-btn--danger"
+                  (click)="removeDropOff(i)"
+                  [disabled]="!canRemove"
+                  [attr.aria-label]="'Remove drop-off ' + (i + 1)"
+                  [title]="canRemove ? 'Remove this stop' : 'A trip needs at least one drop-off'"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3.5 3.5l7 7M10.5 3.5l-7 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+            </div>
+            @if (dropOffMissing(i)) {
+              <p class="field__error">Choose a location for drop-off {{ i + 1 }}.</p>
+            }
+          </div>
+        </li>
+      }
+    </ol>
+
+    <div class="route__footer">
+      <button type="button" class="btn btn--dashed" (click)="addDropOff()" [disabled]="!canAdd">
+        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 2.5v9M2.5 7h9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Add drop-off
+      </button>
+      <span class="field__hint">
+        @if (canAdd) {
+          {{ dropOffs.length }} of {{ maxDropOffs }} stops. Drag stops to change the delivery order.
+        } @else {
+          You’ve reached the {{ maxDropOffs }}-stop limit.
+        }
+      </span>
+    </div>
+  </div>
+
+  @if (duplicateMessage(); as message) {
+    <p class="field__error" role="alert">{{ message }}</p>
+  }
+
+  @if (routeTotalKm(); as km) {
+    <p class="route__total" aria-label="Route distance">
+      <span>Route distance, no return leg</span>
+      <strong>{{ km }} km</strong>
+    </p>
+  }
+
+  <p class="sr-only" aria-live="polite">{{ announcement() }}</p>
+</fieldset>

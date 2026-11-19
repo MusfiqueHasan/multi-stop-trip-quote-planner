@@ -1,0 +1,168 @@
+<div class="planner">
+  <form class="planner__form" [formGroup]="form" (ngSubmit)="requestQuote()" novalidate aria-label="Trip details">
+    @if (notice(); as n) {
+      <div class="notice notice--{{ n.tone }}" [attr.role]="n.tone === 'error' || n.tone === 'warning' ? 'alert' : 'status'" data-testid="notice">
+        <div class="notice__body">
+          <p class="notice__title">{{ n.title }}</p>
+          @if (n.details.length > 0) {
+            <ul class="notice__details">
+              @for (detail of n.details; track $index) {
+                <li>{{ detail }}</li>
+              }
+            </ul>
+          }
+        </div>
+        <button type="button" class="icon-btn" (click)="dismissNotice()" aria-label="Dismiss message">✕</button>
+      </div>
+    }
+
+    <section class="card card--route">
+      <app-route-stops [form]="form" />
+    </section>
+
+    <section class="card">
+      <fieldset class="section">
+        <legend class="section__title"><span class="section__step">2</span> Trucks &amp; cargo</legend>
+
+        <div class="field">
+          <span class="field__label" id="category-label">Truck category</span>
+          <div class="categories" role="radiogroup" aria-labelledby="category-label">
+            @for (category of truckCategories; track category.id) {
+              <label class="category" [class.category--selected]="form.controls.truckCategory.value === category.id">
+                <input type="radio" formControlName="truckCategory" [value]="category.id" class="category__radio" />
+                <span class="category__top">
+                  <span class="category__name">{{ category.label }}</span>
+                  <span class="category__capacity">{{ category.capacityTonnes }} t</span>
+                </span>
+                <span class="category__meta">{{ category.ratePerKm }} BDT per km</span>
+                <span class="category__meta">Minimum {{ category.minimumFarePerTruck | bdt }} per truck</span>
+              </label>
+            }
+          </div>
+          @for (message of fieldErrors('truckCategory'); track $index) {
+            <p class="field__error">{{ message }}</p>
+          }
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label" for="truckCount">Number of trucks</label>
+            <input
+              id="truckCount"
+              class="input"
+              type="number"
+              inputmode="numeric"
+              formControlName="truckCount"
+              [min]="minTrucks"
+              [max]="maxTrucks"
+              step="1"
+              [class.input--error]="fieldErrors('truckCount').length > 0"
+            />
+            <p class="field__hint">{{ minTrucks }}–{{ maxTrucks }} trucks.</p>
+            @for (message of fieldErrors('truckCount'); track $index) {
+              <p class="field__error">{{ message }}</p>
+            }
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="cargoWeight">Total cargo weight (tonnes)</label>
+            <input
+              id="cargoWeight"
+              class="input"
+              type="number"
+              inputmode="decimal"
+              formControlName="cargoWeightTonnes"
+              min="0"
+              step="0.1"
+              placeholder="e.g. 5"
+              [class.input--error]="fieldErrors('cargoWeightTonnes').length > 0 || capacityError() !== null"
+            />
+            @if (capacityHint(); as hint) {
+              <p class="field__hint">{{ hint }}</p>
+            }
+            @for (message of fieldErrors('cargoWeightTonnes'); track $index) {
+              <p class="field__error">{{ message }}</p>
+            }
+            @if (capacityError(); as message) {
+              <p class="field__error" data-testid="capacity-error">{{ message }}</p>
+            }
+          </div>
+        </div>
+      </fieldset>
+    </section>
+
+    <section class="card">
+      <fieldset class="section">
+        <legend class="section__title"><span class="section__step">3</span> Schedule &amp; services</legend>
+
+        <div class="field">
+          <label class="field__label" for="pickupDateTime">Pickup date and time</label>
+          <input
+            id="pickupDateTime"
+            class="input input--date"
+            type="datetime-local"
+            formControlName="pickupDateTime"
+            [min]="minPickupDateTime()"
+            [class.input--error]="fieldErrors('pickupDateTime').length > 0"
+          />
+          <p class="field__hint">Must be later than now (your local time). It’s checked again when you request a quote.</p>
+          @for (message of fieldErrors('pickupDateTime'); track $index) {
+            <p class="field__error" data-testid="pickup-time-error">{{ message }}</p>
+          }
+        </div>
+
+        <div class="field">
+          <span class="field__label">Optional assistance</span>
+          <div class="services">
+            <label class="service" [class.service--on]="form.controls.loadingAssistance.value">
+              <input type="checkbox" formControlName="loadingAssistance" />
+              <span class="service__text">
+                <span class="service__name">Loading assistance</span>
+                <span class="service__price">{{ serviceFees.loadingPerTruck | bdt }} per truck</span>
+              </span>
+            </label>
+            <label class="service" [class.service--on]="form.controls.unloadingAssistance.value">
+              <input type="checkbox" formControlName="unloadingAssistance" />
+              <span class="service__text">
+                <span class="service__name">Unloading assistance</span>
+                <span class="service__price">{{ serviceFees.unloadingPerTruck | bdt }} per truck</span>
+              </span>
+            </label>
+          </div>
+        </div>
+      </fieldset>
+    </section>
+
+    <div class="actions card">
+      <div class="actions__buttons">
+        <button type="submit" class="btn btn--primary" data-testid="get-quote">
+          @if (isQuotePending()) { Get updated quote } @else { Get quote }
+        </button>
+        <button type="button" class="btn btn--secondary" (click)="saveDraft()" data-testid="save-draft">Save draft</button>
+        <button
+          type="button"
+          class="btn btn--ghost"
+          (click)="clearDraft()"
+          [disabled]="!canClear()"
+          [title]="canClear() ? 'Clear the saved draft and start again' : 'Nothing to clear yet'"
+          data-testid="clear-draft"
+        >Clear draft</button>
+      </div>
+      <p class="actions__status" aria-live="polite" data-testid="draft-status">
+        @if (!hasStoredDraft()) {
+          <span class="dot dot--muted"></span> Not saved yet. You can save an unfinished trip and come back later.
+        } @else if (hasUnsavedChanges()) {
+          <span class="dot dot--warn"></span> Unsaved changes@if (lastSavedAt(); as at) { since {{ at | date: 'shortTime' }}}.
+        } @else {
+          <span class="dot dot--ok"></span> Draft saved@if (lastSavedAt(); as at) { at {{ at | date: 'shortTime' }}}.
+        }
+      </p>
+    </div>
+  </form>
+
+  <aside class="planner__quote" #quotePanel>
+    <div class="fare-slip">
+      <app-quote-panel [view]="quoteView()" />
+    </div>
+  </aside>
+</div>

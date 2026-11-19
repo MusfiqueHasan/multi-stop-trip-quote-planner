@@ -1,0 +1,97 @@
+@let v = view();
+<section class="quote" aria-labelledby="quote-title" [attr.aria-busy]="v.kind === 'pending'" data-testid="quote-panel">
+  <h2 class="quote__title" id="quote-title">Fare estimate</h2>
+
+  <div aria-live="polite">
+    @if (v.kind === 'empty') {
+      <div class="quote__state quote__state--empty" data-testid="quote-empty">
+        <p class="quote__headline">No estimate yet</p>
+        <p class="quote__text">Complete the trip details and select <strong>Get quote</strong> to see the fare.</p>
+      </div>
+    } @else if (v.kind === 'pending') {
+      <div class="quote__state quote__state--pending" data-testid="quote-pending">
+        <span class="spinner" aria-hidden="true"></span>
+        <div>
+          <p class="quote__headline">Calculating your quote…</p>
+          @if (v.inputsChanged) {
+            <p class="quote__text">You changed the trip after requesting. That result won’t be shown as valid — select <strong>Get quote</strong> again to price the current trip.</p>
+          } @else {
+            <p class="quote__text">This usually takes about a second.</p>
+          }
+        </div>
+      </div>
+    } @else if (v.kind === 'invalid') {
+      <div class="quote__state quote__state--invalid" role="alert" data-testid="quote-invalid">
+        <p class="quote__headline">Can’t generate a quote yet</p>
+        <p class="quote__text">Fix the following and try again:</p>
+        <ul class="quote__issues">
+          @for (issue of v.issues; track $index) {
+            <li>{{ issue }}</li>
+          }
+        </ul>
+      </div>
+    } @else if (v.kind === 'rejected') {
+      <div class="quote__state quote__state--invalid" role="alert" data-testid="quote-rejected">
+        <p class="quote__headline">The quote request was rejected</p>
+        <ul class="quote__issues">
+          @for (reason of v.reasons; track $index) {
+            <li>{{ reason }}</li>
+          }
+        </ul>
+        <p class="quote__text">Update the trip and request a new quote.</p>
+      </div>
+    } @else if (v.kind === 'outdated') {
+      <div class="quote__state quote__state--outdated" data-testid="quote-outdated">
+        <p class="quote__headline">Trip changed — estimate no longer valid</p>
+        <p class="quote__text">The last estimate was for different trip details. Select <strong>Get quote</strong> to price the current trip.</p>
+      </div>
+    } @else if (v.kind === 'ready') {
+      @let breakdown = v.quote.breakdown;
+      <div class="quote__result" data-testid="quote-ready">
+        <dl class="quote__lines">
+          <div class="quote__line">
+            <dt>Distance</dt>
+            <dd data-testid="quote-distance">{{ breakdown.distanceKm }} km</dd>
+          </div>
+          <div class="quote__line quote__line--sub">
+            <dt>Fare per truck</dt>
+            <dd>
+              @if (breakdown.minimumFareApplied) {
+                <span class="tag">minimum fare</span>
+              }
+              {{ breakdown.farePerTruck | bdt }}
+            </dd>
+          </div>
+          <div class="quote__line">
+            <dt>Transport subtotal</dt>
+            <dd data-testid="quote-transport">{{ breakdown.transportCost | bdt }}</dd>
+          </div>
+          <div class="quote__line">
+            <dt>Optional services</dt>
+            <dd data-testid="quote-services">{{ breakdown.serviceCost | bdt }}</dd>
+          </div>
+          <div class="quote__line quote__line--total">
+            <dt>Total</dt>
+            <dd data-testid="quote-total">{{ breakdown.totalQuote | bdt }}</dd>
+          </div>
+        </dl>
+
+        @if (summary(); as s) {
+          <div class="quote__summary">
+            <p class="quote__summary-title">Quoted for</p>
+            <ul>
+              <li><span>Route</span>{{ s.route }}</li>
+              <li><span>Legs</span>{{ s.legs }}</li>
+              <li><span>Trucks</span>{{ s.trucks }}</li>
+              <li><span>Rate</span>{{ s.rate }}</li>
+              <li><span>Cargo</span>{{ s.cargo }}</li>
+              <li><span>Pickup</span>{{ s.pickupAt }}</li>
+              <li><span>Services</span>{{ s.services }}</li>
+            </ul>
+          </div>
+        }
+        <p class="quote__note">Estimate for exactly the details above. Changing the trip requires a new quote.</p>
+      </div>
+    }
+  </div>
+</section>
