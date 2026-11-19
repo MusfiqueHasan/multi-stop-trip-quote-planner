@@ -108,14 +108,11 @@ fieldset {
   align-items: center;
 }
 
+/* Same mark as public/favicon.svg */
 .app-header__logo {
-  display: grid;
-  place-items: center;
+  display: block;
   width: 52px;
   height: 52px;
-  border-radius: 14px;
-  background: var(--marking);
-  color: var(--ink);
   flex-shrink: 0;
 }
 
