@@ -52,7 +52,7 @@ Fonts (Figtree, Bricolage Grotesque) are bundled via `@fontsource` packages, so 
 
 ## Verification
 
-**Automated — 34 specs, Karma + Jasmine, ChromeHeadless (`npm run test:ci`):**
+**Automated — 35 specs, Karma + Jasmine, ChromeHeadless (`npm run test:ci`):**
 
 | Spec | What it proves |
 | --- | --- |
@@ -60,7 +60,7 @@ Fonts (Figtree, Bricolage Grotesque) are bundled via `@fontsource` packages, so 
 | `features/trip-planner/trip-form.spec.ts` (7) | Valid form → `TripRequest`; duplicates (pickup vs drop-off, drop-off vs drop-off); capacity boundary (equal OK, above fails); weight and truck-count ranges; "equal to now" is invalid and a stale time fails after the clock moves; reorder keeps control identity; draft resize. |
 | `core/draft/draft-sanitizer.spec.ts` (8) | Missing data; invalid JSON / wrong shape / wrong version discarded; wrong types and unknown IDs cleared; duplicates removed and drop-offs capped; truck counts 0, 6, −1, 2.5, "3", `true` rejected; incomplete drafts and past dates kept; storage round-trip; quota error reported, not thrown. |
 | `features/trip-planner/quote.store.spec.ts` (8) | Pending → success after latency; **slow-then-fast** requests show only the newer quote and the older one never overwrites it; **fast-then-slow** keeps the spinner for the latest request; rejection when pickup time has passed; reset cancels; quote shown as outdated for changed inputs or a now-invalid form; latency always in 300–1,200 ms; nothing emitted before latency. |
-| `features/trip-planner/trip-planner.component.spec.ts` (6) | Full DOM flow for AC-1, then "outdated" after an edit; re-request while pending (AC-2); time passes before clicking → service not called, error shown (AC-4); capacity error blocks the quote; save incomplete draft → "reload" restores it with no quote and flags the passed pickup time (AC-6); corrupted draft handled and Clear works (AC-5). |
+| `features/trip-planner/trip-planner.component.spec.ts` (7) | Full DOM flow for AC-1, then "outdated" after an edit; re-request while pending (AC-2); time passes before clicking → service not called, error shown (AC-4); capacity error blocks the quote; save incomplete draft → "reload" restores it with no quote and flags the passed pickup time (AC-6); a quote planted in storage is ignored and Get quote prices the restored values (AC-6); corrupted draft handled and Clear works (AC-5). |
 
 **Manual, in Chrome (scripted with puppeteer-core outside the repo):**
 - Filled the verification trip with C before B, **dragged** B above C with the mouse → order became B, C.

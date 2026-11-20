@@ -13,7 +13,7 @@ Built in the order below: domain first (pure, easy to test), then services, then
 | 7 | Typed reactive form, validators, error messages | FR-4–10 | `trip-form.spec` passes | ✅ |
 | 8 | UI: route editor with drag-and-drop, truck/cargo, schedule/services, fare panel, draft actions | FR-1–3, 14, NFR-6 | Works in a real browser | ✅ |
 | 9 | Wire time re-validation (request, 30 s, focus, restore) | FR-6, FR-25 | Component test: time passes → quote blocked | ✅ |
-| 10 | Component integration tests | AC-1–AC-6 | 34/34 specs pass headless | ✅ |
+| 10 | Component integration tests | AC-1–AC-6 | 35/35 specs pass headless | ✅ |
 | 11 | Visual pass: route drawn as a road, dark fare slip, mobile layout | NFR-6 | Screenshots in `docs/screenshots` | ✅ |
 | 12 | Docs: PRD, spec, plan, notes, README | NFR-7 | This folder + README | ✅ |
 

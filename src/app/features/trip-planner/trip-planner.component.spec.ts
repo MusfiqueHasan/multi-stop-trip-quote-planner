@@ -141,6 +141,25 @@ describe('TripPlannerComponent', () => {
     discardPeriodicTasks();
   }));
 
+  it('never trusts a stored quote: a restored draft is quoted fresh from its restored values', fakeAsync(() => {
+    // A tampered payload carrying a stale, wrong quote next to a valid trip.
+    storage.setItem(
+      DRAFT_STORAGE_KEY,
+      JSON.stringify({ version: 1, savedAt: NOW.toISOString(), trip: VERIFICATION_DRAFT, quote: { total: 1 } }),
+    );
+    create([500]);
+    expect(component.form.valid).toBeTrue();
+    expect(query('quote-empty')).not.toBeNull();
+    expect(query('quote-ready')).toBeNull();
+    expect(text('notice')).toContain('request a new quote');
+
+    clickGetQuote();
+    tick(500);
+    fixture.detectChanges();
+    expect(text('quote-total')).toBe('5,790 BDT');
+    discardPeriodicTasks();
+  }));
+
   it('handles a corrupted draft safely and can clear the draft', fakeAsync(() => {
     storage.setItem(DRAFT_STORAGE_KEY, '{"version":1,"trip":');
     create();

@@ -21,7 +21,7 @@ Angular 18 single-page app for a fictional logistics service: configure a truck 
 nvm use            # or any Node 18.19+/20.11+/22 install
 npm install
 npm start          # http://localhost:4200
-npm run test:ci    # single headless run (34 specs)
+npm run test:ci    # single headless run (35 specs)
 npm test           # watch mode in Chrome
 npm run build      # production build → dist/
 ```
@@ -81,7 +81,7 @@ More in the [implementation notes](docs/04-IMPLEMENTATION-NOTES.md#issues-encoun
 
 ## How correctness was verified
 
-- **34 automated specs** covering the pricing example and edge cases, validation, draft sanitising, out-of-order async responses in both directions, stale-quote display, and full component flows. See the [verification table](docs/04-IMPLEMENTATION-NOTES.md#verification).
+- **35 automated specs** covering the pricing example and edge cases, validation, draft sanitising, out-of-order async responses in both directions, stale-quote display, and full component flows. See the [verification table](docs/04-IMPLEMENTATION-NOTES.md#verification).
 - **Manual run in Chrome:** dragged stops to reorder, reproduced 5,790 BDT, saved and reloaded the draft, checked the 390 px layout and the console for errors.
 
 ## Documentation (spec-driven)
