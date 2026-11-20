@@ -237,6 +237,7 @@ fieldset {
 
 .field {
   display: grid;
+  align-content: start; /* keep rows packed when a sibling field in the same row is taller */
   gap: 6px;
   min-width: 0;
 }
